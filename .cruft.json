@@ -1,0 +1,21 @@
+{
+  "template": "/home/lorenzo/git/pyrepo-cookiecutter",
+  "commit": "48d378d416117e6476ea87472fd52fe655729e38",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Lorenzo Gaifas",
+      "email": "brisvag@gmail.com",
+      "github_username": "brisvag",
+      "project_name": "waretomo",
+      "project_slug": "waretomo",
+      "project_short_description": "Batch processing for tomography data with Warp and aretomo.",
+      "pypi_username": "brisvag",
+      "_copy_without_render": [
+        ".github/workflows/*"
+      ],
+      "_template": "/home/lorenzo/git/pyrepo-cookiecutter"
+    }
+  },
+  "directory": null
+}
