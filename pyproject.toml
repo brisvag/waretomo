@@ -15,7 +15,7 @@ authors = [
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -25,7 +25,14 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    "GPUtil",
+    "click",
+    "mdocfile",
+    "pandas",
+    "rich",
+    "topaz-em",
+]
 
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
@@ -34,7 +41,6 @@ test = ["pytest>=6.0", "pytest-cov"]
 dev = [
     "black",
     "ipython",
-    "mypy",
     "pdbpp",
     "pre-commit",
     "pytest-cov",
@@ -48,8 +54,8 @@ homepage = "https://github.com/brisvag/waretomo"
 repository = "https://github.com/brisvag/waretomo"
 
 # same as console_scripts entry point
-# [project.scripts]
-# spam-cli = "spam:main_cli"
+[project.scripts]
+waretomo = "waretomo.main:cli"
 
 # Entry points
 # https://peps.python.org/pep-0621/#entry-points
@@ -110,21 +116,6 @@ ignore = [
 minversion = "6.0"
 testpaths = ["tests"]
 filterwarnings = ["error"]
-
-# https://mypy.readthedocs.io/en/stable/config_file.html
-[tool.mypy]
-files = "src/**/"
-strict = true
-disallow_any_generics = false
-disallow_subclassing_any = false
-show_error_codes = true
-pretty = true
-
-# # module specific overrides
-# [[tool.mypy.overrides]]
-# module = ["numpy.*",]
-# ignore_errors = true
-
 
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.report]
