@@ -6,7 +6,7 @@
 [![CI](https://github.com/brisvag/waretomo/actions/workflows/ci.yml/badge.svg)](https://github.com/brisvag/waretomo/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/brisvag/waretomo/branch/main/graph/badge.svg)](https://codecov.io/gh/brisvag/waretomo)
 
-Batch processing for tomography data with Warp and aretomo.
+Overengineered batch processing script for tomography data with Warp and aretomo.
 
 # Installation
 

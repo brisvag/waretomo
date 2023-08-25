@@ -160,9 +160,8 @@ def cli(
     """
     Run aretomo in batch on data preprocessed in warp.
 
-    Needs to be ran after imod stacks were generated. Requires:
-    - ccderaser
-    - AreTomo>=1.3.0.
+    Needs to be ran after imod stacks were generated.
+    Requires ccderaser and AreTomo>=1.3.0.
 
     Assumes the default Warp directory structure with generated imod stacks.
     """
