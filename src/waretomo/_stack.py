@@ -4,7 +4,7 @@ from time import sleep
 
 from rich import print
 
-from .threaded import run_threaded
+from ._threaded import run_threaded
 
 
 def _stack(

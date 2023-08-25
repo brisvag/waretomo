@@ -1,20 +1,21 @@
 import pandas as pd
-from mdocfile.mdoc import Mdoc
+from mdocfile.data_models import Mdoc
 
-from .threaded import run_threaded
+from ._threaded import run_threaded
 
 
 def _tilt_mdoc(
     mdoc_file, tlt_file, skipped_tilts, verbose=False, dry_run=False, overwrite=False
 ):
-    if verbose:
-        print(f"Tilting mdoc: {mdoc_file}")
-        print(f"using: {tlt_file}")
-
     output = mdoc_file.parent / "mdoc_tilted" / mdoc_file.name
 
     if not overwrite and output.exists():
         raise FileExistsError(output)
+
+    if verbose:
+        print(f"Tilting mdoc: {mdoc_file}")
+        print(f"using: {tlt_file}")
+        print(f"saving to {output}")
 
     if not dry_run:
         mdoc = Mdoc.from_file(mdoc_file)

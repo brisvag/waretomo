@@ -164,7 +164,7 @@ def cli(
     from rich.panel import Panel
     from rich.progress import Progress
 
-    from .parse import parse_data
+    from ._parse import parse_data
 
     if gpus is not None:
         gpus = [int(gpu) for gpu in gpus.split(",")]
@@ -174,7 +174,7 @@ def cli(
         mdoc_dir = warp_dir
     mdoc_dir = Path(mdoc_dir)
     if output_dir is None:
-        output_dir = warp_dir / "stemia"
+        output_dir = warp_dir / "waretomo_processing"
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -223,16 +223,18 @@ def cli(
 
         nl = "\n"
 
-        not_ready = "".join(f'{nl}{" " * 12}- {ts}' for ts in tilt_series_unprocessed)
-        ready = "".join(f'{nl}{" " * 12}- {ts["name"]}' for ts in tilt_series)
+        not_ready_log = "".join(
+            f'{nl}{" " * 12}- {ts}' for ts in tilt_series_unprocessed
+        )
+        ready_log = "".join(f'{nl}{" " * 12}- {ts["name"]}' for ts in tilt_series)
         excluded = "".join(f'{nl}{" " * 12}- {ts}' for ts in tilt_series_excluded)
-        steps = "".join(
+        steps_log = "".join(
             f'{nl}{" " * 12}- '
-            '[{"green" if v else "red"}]{k}[/{"green" if v else "red"}] '
+            f'[{"green" if v else "red"}]{k}[/{"green" if v else "red"}] '
             for k, v in steps.items()
         )
-        opts = "".join(f'{nl}{" " * 12}- {k}: {v}' for k, v in meta_kwargs.items())
-        aretomo_opts = "".join(
+        opts_log = "".join(f'{nl}{" " * 12}- {k}: {v}' for k, v in meta_kwargs.items())
+        aretomo_opts_log = "".join(
             f'{nl}{" " * 12}- {k}: {v}' for k, v in aretomo_kwargs.items()
         )
 
@@ -242,12 +244,12 @@ def cli(
                     f"""
             [bold]Warp directory[/bold]: {warp_dir}
             [bold]Mdoc directory[/bold]: {mdoc_dir}
-            [bold]Tilt series - NOT READY[/bold]: {not_ready}
-            [bold]Tilt series - READY[/bold]: {ready}
+            [bold]Tilt series - NOT READY[/bold]: {not_ready_log}
+            [bold]Tilt series - READY[/bold]: {ready_log}
             [bold]Tilt series - EXCLUDED[/bold]: {excluded}
-            [bold]Processing steps[/bold]: {steps}
-            [bold]Run options[/bold]: {opts}
-            [bold]AreTomo options[/bold]: {aretomo_opts}
+            [bold]Processing steps[/bold]: {steps_log}
+            [bold]Run options[/bold]: {opts_log}
+            [bold]AreTomo options[/bold]: {aretomo_opts_log}
         """
                 )
             )

@@ -9,7 +9,7 @@ from time import sleep
 import GPUtil
 from rich import print
 
-from .threaded import run_threaded
+from ._threaded import run_threaded
 
 
 @contextmanager

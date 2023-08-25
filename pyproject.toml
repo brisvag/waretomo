@@ -32,6 +32,7 @@ dependencies = [
     "pandas",
     "rich",
     "topaz-em",
+    "sh",
 ]
 
 # extras
