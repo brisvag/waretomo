@@ -2,6 +2,8 @@ from enum import Enum, auto
 
 import click
 
+import waretomo
+
 
 class ProcessingStep(str, Enum):
     """Enum for step selection."""
@@ -27,14 +29,16 @@ class ProcessingStep(str, Enum):
     "warp_dir", type=click.Path(exists=True, dir_okay=True, resolve_path=True)
 )
 @click.option(
-    "-m", "--mdoc-dir", type=click.Path(exists=True, dir_okay=True, resolve_path=True)
+    "-m",
+    "--mdoc-dir",
+    type=click.Path(exists=True, dir_okay=True, resolve_path=True),
+    help="directory containing mdoc files [default: same as WARP_DIR]",
 )
 @click.option(
     "-o",
     "--output-dir",
     type=click.Path(exists=True, dir_okay=True, resolve_path=True),
-    help="output directory for all the processing. "
-    "If None, defined as warp_dir/aretomo",
+    help="output directory for all the processing [default: WARP_DIR/waretomo]",
 )
 @click.option(
     "-d",
@@ -42,16 +46,20 @@ class ProcessingStep(str, Enum):
     is_flag=True,
     help="only print some info, without running the commands.",
 )
-@click.option("-v", "--verbose", is_flag=True, help="print individual commands")
+@click.option("-v", "--verbose", is_flag=True, help="echo all individual commands")
 @click.option(
-    "-j", "--just", type=str, multiple=True, help="reconstruct just these tomograms"
+    "-j",
+    "--just",
+    type=str,
+    multiple=True,
+    help="reconstruct just this tomogram (can be passed multiple times)",
 )
 @click.option(
     "-e",
     "--exclude",
     type=str,
     multiple=True,
-    help="exclude these tomograms from the run",
+    help="exclude this tomogram from the run (can be passed multiple times)",
 )
 @click.option(
     "-t",
@@ -72,7 +80,7 @@ class ProcessingStep(str, Enum):
     "--binning",
     type=int,
     default=4,
-    help="binning for aretomo reconstruction (relative to warp binning)",
+    help="binning for aretomo reconstruction (relative to warp pre-processed binning)",
 )
 @click.option(
     "-a", "--tilt-axis", type=float, help="starting tilt axis for AreTomo, if any"
@@ -111,7 +119,7 @@ class ProcessingStep(str, Enum):
 @click.option(
     "--stop-at",
     type=click.Choice(ProcessingStep.__members__),
-    default="denoise",
+    default="reconstruct",
     help="terminate processing after this step",
 )
 @click.option("--ccderaser", type=str, default="ccderaser", help="ccderaser executable")
@@ -124,6 +132,7 @@ class ProcessingStep(str, Enum):
 @click.option(
     "--tiltcorr/--no-tiltcorr", default=True, help="do not correct sample tilt"
 )
+@click.version_option(waretomo.__version__, "-V", "--version")
 def cli(
     warp_dir,
     mdoc_dir,
