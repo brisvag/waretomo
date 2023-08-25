@@ -105,6 +105,12 @@ class ProcessingStep(str, Enum):
     "--train", is_flag=True, default=False, help="whether to train a new denosing model"
 )
 @click.option(
+    "--topaz-tile-size",
+    type=int,
+    default=64,
+    help="tile size for training topaz model.",
+)
+@click.option(
     "--topaz-patch-size",
     type=int,
     default=64,
@@ -149,6 +155,7 @@ def cli(
     roi_dir,
     overwrite,
     train,
+    topaz_tile_size,
     topaz_patch_size,
     start_from,
     stop_at,
@@ -326,7 +333,8 @@ def cli(
             for half in ("even", "odd"):
                 if verbose:
                     print(f"\n[green]Reconstructing {half} tomograms for deonoising...")
-                (output_dir / half).mkdir(parents=True, exist_ok=True)
+                half_dir = output_dir / half
+                half_dir.mkdir(parents=True, exist_ok=True)
                 aretomo_batch(
                     progress,
                     tilt_series,
@@ -336,19 +344,27 @@ def cli(
                     **aretomo_kwargs,
                     **meta_kwargs,
                 )
+                # remove leftovers from aretomo otherwise topaz dies later
+                for f in half_dir.glob("*_projX?.mrc"):
+                    f.unlink(missing_ok=True)
+                for f in half_dir.glob("*.aretomolog"):
+                    f.unlink(missing_ok=True)
 
         if steps["denoise"]:
             from ._topaz import topaz_batch
 
             if verbose:
                 print("\n[green]Denoising tomograms...")
-            outdir = output_dir / "denoised"
-            outdir.mkdir(parents=True, exist_ok=True)
+            outdir_denoised = output_dir / "denoised"
+            outdir_denoised.mkdir(parents=True, exist_ok=True)
             topaz_batch(
                 progress,
                 tilt_series,
-                outdir=outdir,
+                outdir=outdir_denoised,
+                even=str(output_dir / "even"),
+                odd=str(output_dir / "odd"),
                 train=train,
+                tile_size=topaz_tile_size,
                 patch_size=topaz_patch_size,
                 **meta_kwargs,
             )
