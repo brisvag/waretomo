@@ -107,7 +107,7 @@ class ProcessingStep(str, Enum):
 @click.option(
     "--topaz-patch-size",
     type=int,
-    default=32,
+    default=64,
     help="patch size for denoising in topaz.",
 )
 @click.option(
@@ -342,10 +342,12 @@ def cli(
 
             if verbose:
                 print("\n[green]Denoising tomograms...")
+            outdir = output_dir / "denoised"
+            outdir.mkdir(parents=True, exist_ok=True)
             topaz_batch(
                 progress,
                 tilt_series,
-                outdir=output_dir,
+                outdir=outdir,
                 train=train,
                 patch_size=topaz_patch_size,
                 **meta_kwargs,
