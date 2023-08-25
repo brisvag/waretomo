@@ -117,6 +117,16 @@ class ProcessingStep(str, Enum):
     help="patch size for denoising in topaz.",
 )
 @click.option(
+    "--topaz-model",
+    type=str,
+    default="unet-3d-10a",
+    help="topaz model for denoising. If --train was not given, this must to be the "
+    "name of a pre-trained model ('unet-3d-10a', 'unet-3d-20a') or the path of a "
+    "previously generated model. If instead --train was given, a new model will"
+    "be generated with the given name. New models are saved inside "
+    "'OUTPUT_DIR/trained_models/.",
+)
+@click.option(
     "--start-from",
     type=click.Choice(ProcessingStep.__members__),
     default="fix",
@@ -157,6 +167,7 @@ def cli(
     train,
     topaz_tile_size,
     topaz_patch_size,
+    topaz_model,
     start_from,
     stop_at,
     ccderaser,
@@ -196,6 +207,25 @@ def cli(
     if roi_dir is not None:
         roi_dir = Path(roi_dir)
 
+        pretrained_models = ("unet-3d-10a", "unet-3d-20a")
+    if train:
+        if topaz_model in pretrained_models:
+            raise click.UsageError(
+                f"Model '{topaz_model}' already exists. Provide a new name."
+            )
+        elif "/" in topaz_model:
+            raise click.UsageError(
+                f"Model '{topaz_model}' seems to be a path. "
+                "Only a new name should be given."
+            )
+    else:
+        if not Path(topaz_model).exists() and topaz_model not in pretrained_models:
+            raise click.UsageError(
+                f"Model '{topaz_model}' does not exist. "
+                "Provide a path to an existing model "
+                f"or one of {pretrained_models}."
+            )
+
     with Progress() as progress:
         tilt_series, tilt_series_excluded, tilt_series_unprocessed = parse_data(
             progress,
@@ -225,6 +255,13 @@ def cli(
             "verbose": verbose,
         }
 
+        topaz_opts = {
+            "train": train,
+            "model_name": topaz_model,
+            "tile_size": topaz_tile_size,
+            "patch_size": topaz_patch_size,
+        }
+
         start_from = ProcessingStep[start_from]
         stop_at = ProcessingStep[stop_at]
 
@@ -252,6 +289,7 @@ def cli(
         aretomo_opts_log = "".join(
             f'{nl}{" " * 12}- {k}: {v}' for k, v in aretomo_kwargs.items()
         )
+        topaz_log = "".join(f'{nl}{" " * 12}- {k}: {v}' for k, v in topaz_opts.items())
 
         print(
             Panel(
@@ -265,6 +303,7 @@ def cli(
             [bold]Processing steps[/bold]: {steps_log}
             [bold]Run options[/bold]: {opts_log}
             [bold]AreTomo options[/bold]: {aretomo_opts_log}
+            [bold]Topaz options[/bold]: {topaz_log}
         """
                 )
             )
@@ -363,8 +402,6 @@ def cli(
                 outdir=outdir_denoised,
                 even=str(output_dir / "even"),
                 odd=str(output_dir / "odd"),
-                train=train,
-                tile_size=topaz_tile_size,
-                patch_size=topaz_patch_size,
+                **topaz_opts,
                 **meta_kwargs,
             )

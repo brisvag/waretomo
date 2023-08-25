@@ -5,12 +5,8 @@ import re
 import time
 from concurrent import futures
 
-import pkg_resources
-import torch
-import torch.nn as nn
 from rich import print
-from topaz.commands.denoise3d import denoise, train_model
-from topaz.denoise import UDenoiseNet3D
+from topaz.commands.denoise3d import denoise, load_model, set_device, train_model
 from topaz.torch import set_num_threads
 
 
@@ -46,6 +42,7 @@ def topaz_batch(
     outdir,
     even,
     odd,
+    model_name="unet-3d-10a",
     train=False,
     tile_size=32,
     patch_size=32,
@@ -62,21 +59,17 @@ def topaz_batch(
             train_model,
             even_path=even,
             odd_path=odd,
-            save_prefix=str(outdir / "trained_model"),
+            save_prefix=str(outdir / "trained_models" / model_name),
             save_interval=10,
             device=-2,
             tilesize=patch_size,
+            base_kernel_width=11,
             num_workers=multiprocessing.cpu_count(),
         )
     else:
-        model = UDenoiseNet3D(base_width=7)
-        f = pkg_resources.resource_stream(
-            "topaz", "pretrained/denoise/unet-3d-10a-v0.2.4.sav"
-        )
-        state_dict = torch.load(f)
-        model.load_state_dict(state_dict)
-        model = nn.DataParallel(model)
-        model.cuda()
+        model = load_model(model_name, base_kernel_width=11)
+    model.eval()
+    model, use_cuda, num_devices = set_device(model, -2)
 
     inputs = [ts["recon"] for ts in tilt_series]
 
@@ -97,7 +90,7 @@ def topaz_batch(
                 model=model,
                 path=path,
                 outdir=str(outdir),
-                batch_size=torch.cuda.device_count(),
+                batch_size=num_devices,
                 patch_size=patch_size,
                 padding=patch_size // 2,
                 suffix="",
