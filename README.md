@@ -8,13 +8,17 @@
 
 Overengineered batch processing script for tomography data with Warp and aretomo.
 
-# Installation
+# Installation and usage
 
 ```bash
 pip install waretomo
 ```
 
-# Usage
+```bash
+waretomo -h
+```
+
+# Walkthrough
 
 Here's a short summary of how I recommend using this script:
 
