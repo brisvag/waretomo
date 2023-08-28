@@ -255,9 +255,10 @@ def cli(
             "verbose": verbose,
         }
 
-        topaz_opts = {
+        topaz_kwargs = {
             "train": train,
             "model_name": topaz_model,
+            "gpus": gpus,
             "tile_size": topaz_tile_size,
             "patch_size": topaz_patch_size,
         }
@@ -289,7 +290,9 @@ def cli(
         aretomo_opts_log = "".join(
             f'{nl}{" " * 12}- {k}: {v}' for k, v in aretomo_kwargs.items()
         )
-        topaz_log = "".join(f'{nl}{" " * 12}- {k}: {v}' for k, v in topaz_opts.items())
+        topaz_log = "".join(
+            f'{nl}{" " * 12}- {k}: {v}' for k, v in topaz_kwargs.items()
+        )
 
         print(
             Panel(
@@ -402,6 +405,6 @@ def cli(
                 outdir=outdir_denoised,
                 even=str(output_dir / "even"),
                 odd=str(output_dir / "odd"),
-                **topaz_opts,
+                **topaz_kwargs,
                 **meta_kwargs,
             )

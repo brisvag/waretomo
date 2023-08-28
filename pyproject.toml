@@ -28,11 +28,11 @@ dynamic = ["version"]
 dependencies = [
     "GPUtil",
     "click",
-    "mdocfile",
+    "mdocfile==0.1.0",
     "pandas",
     "rich",
-    "topaz-em",
     "sh",
+    "topaz-em==0.2.5",
 ]
 
 # extras
