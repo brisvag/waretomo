@@ -207,7 +207,7 @@ def cli(
     if roi_dir is not None:
         roi_dir = Path(roi_dir)
 
-        pretrained_models = ("unet-3d-10a", "unet-3d-20a")
+    pretrained_models = ("unet-3d-10a", "unet-3d-20a")
     if train:
         if topaz_model in pretrained_models:
             raise click.UsageError(

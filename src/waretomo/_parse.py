@@ -2,6 +2,7 @@ from pathlib import Path, PureWindowsPath
 from xml.etree import ElementTree
 
 import mdocfile
+from rich import print
 
 
 def parse_data(
@@ -51,6 +52,18 @@ def parse_data(
         even = []
         valid_xml = None
         for i, tilt in enumerate(tilts):
+            if not tilt.exists():
+                print(
+                    f"[red]WARN: {tilt.name} is listed in an mdoc file, "
+                    "but the file does not exists."
+                )
+                print(
+                    "[red]      The tilt will be skipped, "
+                    "but you may want to check your data."
+                )
+                skipped_tilts.append(i)
+                continue
+
             xml = ElementTree.parse(tilt.with_suffix(".xml")).getroot()
             if xml.attrib["UnselectManual"] == "True":
                 skipped_tilts.append(i)
