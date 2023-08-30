@@ -18,6 +18,8 @@ pip install waretomo
 waretomo -h
 ```
 
+Every time you run waretomo, a log will be appended to an `waretomo.log` file in the output directory.
+
 # Walkthrough
 
 Here's a short summary of how I recommend using this script:

@@ -183,6 +183,8 @@ def cli(
 
     Assumes the default Warp directory structure with generated imod stacks.
     """
+    import sys
+    from datetime import datetime
     from inspect import cleandoc
     from pathlib import Path
 
@@ -294,10 +296,8 @@ def cli(
             f'{nl}{" " * 12}- {k}: {v}' for k, v in topaz_kwargs.items()
         )
 
-        print(
-            Panel(
-                cleandoc(
-                    f"""
+        summary = cleandoc(
+            f"""
             [bold]Warp directory[/bold]: {warp_dir}
             [bold]Mdoc directory[/bold]: {mdoc_dir}
             [bold]Tilt series - NOT READY[/bold]: {not_ready_log}
@@ -307,10 +307,16 @@ def cli(
             [bold]Run options[/bold]: {opts_log}
             [bold]AreTomo options[/bold]: {aretomo_opts_log}
             [bold]Topaz options[/bold]: {topaz_log}
-        """
-                )
-            )
+            """
         )
+        print(Panel(summary))
+
+        if not dry_run:
+            with open(output_dir / "waretomo.log", "a") as f:
+                print("=" * 80, file=f)
+                print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), file=f)
+                print(f'Command: {" ".join(sys.argv)}', file=f)
+                print(summary, "\n", file=f)
 
         if steps["fix"]:
             from ._fix import fix_batch
