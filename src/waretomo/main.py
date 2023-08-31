@@ -89,6 +89,7 @@ class ProcessingStep(str, Enum):
     "-p",
     "--patches",
     type=int,
+    default=4,
     help="number of patches for local alignment in aretomo (NxN), if any",
 )
 @click.option(
@@ -135,7 +136,7 @@ class ProcessingStep(str, Enum):
 @click.option(
     "--stop-at",
     type=click.Choice(ProcessingStep.__members__),
-    default="reconstruct",
+    default="denoise",
     help="terminate processing after this step",
 )
 @click.option("--ccderaser", type=str, default="ccderaser", help="ccderaser executable")
