@@ -89,7 +89,6 @@ class ProcessingStep(str, Enum):
     "-p",
     "--patches",
     type=int,
-    default=4,
     help="number of patches for local alignment in aretomo (NxN), if any",
 )
 @click.option(
