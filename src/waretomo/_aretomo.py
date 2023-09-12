@@ -26,7 +26,7 @@ def _aretomo(
     aln,
     xf,
     output,
-    full_ts_name,
+    warp_mdoc_basename,
     suffix="",
     cmd="AreTomo",
     tilt_axis=0,
@@ -112,7 +112,7 @@ def _aretomo(
     if verbose:
         print(aretomo_cmd)
         if not reconstruct:
-            print(f'mv {xf} {full_ts_name + ".xf"}')
+            print(f'mv {xf} {warp_mdoc_basename + ".xf"}')
 
     if not dry_run:
         with _cd(cwd):
@@ -127,7 +127,7 @@ def _aretomo(
             proc.check_returncode()
         if not reconstruct:
             # move xf file so warp can see it (needs full ts name + .xf)
-            shutil.move(cwd / xf, cwd / (full_ts_name + ".xf"))
+            shutil.move(cwd / xf, cwd / (warp_mdoc_basename + ".xf"))
     else:
         sleep(0.1)
         if gpu_queue is not None:
@@ -163,7 +163,7 @@ def aretomo_batch(
                 output=ts["recon" + suffix],
                 gpu_queue=gpu_queue,
                 cmd=cmd,
-                full_ts_name=ts["name"],
+                warp_mdoc_basename=ts["mdoc"].stem,
                 **ts["aretomo_kwargs"],
                 **kwargs,
             )

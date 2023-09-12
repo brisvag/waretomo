@@ -1,7 +1,7 @@
 from pathlib import Path, PureWindowsPath
 from xml.etree import ElementTree
 
-import mdocfile
+from mdocfile.data_models import Mdoc
 from rich import print
 
 
@@ -31,11 +31,15 @@ def parse_data(
     tilt_series_excluded = []
     tilt_series_unprocessed = []
 
-    for mdoc in progress.track(mdocs, description="Reading mdocs..."):
-        ts_name = mdoc.stem
-        stack = imod_dir / ts_name / (ts_name + ".st")
+    for mdoc_file in progress.track(mdocs, description="Reading mdocs..."):
+        mdoc = Mdoc.from_file(mdoc_file)
 
-        if ts_name in exclude:
+        # warp uses mdoc name in many places, but some times the ts_name is important
+        mdoc_name = mdoc_file.stem
+        ts_name = mdoc.global_data.ImageFile.stem
+        stack = imod_dir / mdoc_name / (mdoc_name + ".st")
+
+        if ts_name in exclude or mdoc_name in exclude:
             tilt_series_excluded.append(ts_name)
             continue
         # skip if not preprocessed in warp
@@ -43,10 +47,11 @@ def parse_data(
             tilt_series_unprocessed.append(ts_name)
             continue
 
-        df = mdocfile.read(mdoc)
-
         # extract even/odd paths
-        tilts = [warp_dir / PureWindowsPath(tilt).name for tilt in df.SubFramePath]
+        tilts = [
+            warp_dir / PureWindowsPath(tilt.SubFramePath).name
+            for tilt in mdoc.section_data
+        ]
         skipped_tilts = []
         odd = []
         even = []
@@ -119,7 +124,7 @@ def parse_data(
                 "xf": alignment_result_dir / (ts_stripped + ".xf"),
                 "tlt": alignment_result_dir / (ts_stripped + ".tlt"),
                 "skipped_tilts": skipped_tilts,
-                "mdoc": mdoc,
+                "mdoc": mdoc_file,
                 "roi": roi_file,
                 "odd": odd,
                 "even": even,
@@ -129,8 +134,8 @@ def parse_data(
                 "recon_even": output_dir / "even" / (ts_name + ".mrc"),
                 "recon": output_dir / (ts_name + ".mrc"),
                 "aretomo_kwargs": {
-                    "dose": df.ExposureDose[0],
-                    "px_size": df.PixelSpacing[0] * 2**binning,
+                    "dose": mdoc.section_data[0].ExposureDose,
+                    "px_size": mdoc.section_data[0].PixelSpacing * 2**binning,
                     "cs": cs,
                     "kv": kv,
                     "defocus": defocus,

@@ -38,7 +38,8 @@ class ProcessingStep(str, Enum):
     "-o",
     "--output-dir",
     type=click.Path(exists=True, dir_okay=True, resolve_path=True),
-    help="output directory for all the processing [default: WARP_DIR/waretomo]",
+    help="output directory for all the processing "
+    "[default: WARP_DIR/waretomo_processing]",
 )
 @click.option(
     "-d",

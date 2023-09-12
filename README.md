@@ -8,6 +8,8 @@
 
 Overengineered batch processing script for tomography data with Warp and aretomo.
 
+_NOTE: This was tested with AreTomo 1.3.4, i's recommended to use the same version._
+
 # Installation and usage
 
 ```bash
