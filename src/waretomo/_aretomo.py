@@ -155,7 +155,7 @@ def aretomo_batch(
     for ts in tilt_series:
         partials.append(
             lambda ts=ts: _aretomo(
-                input_=ts["stack" + suffix] if suffix else ts["fix"],
+                input_=ts["stack" + suffix],
                 rawtlt=ts["rawtlt"],
                 aln=ts["aln"],
                 xf=ts["xf"],

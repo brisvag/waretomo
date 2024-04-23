@@ -8,7 +8,6 @@ import waretomo
 class ProcessingStep(str, Enum):
     """Enum for step selection."""
 
-    fix = auto()
     align = auto()
     tilt_mdocs = auto()
     reconstruct = auto()
@@ -130,7 +129,7 @@ class ProcessingStep(str, Enum):
 @click.option(
     "--start-from",
     type=click.Choice(ProcessingStep.__members__),
-    default="fix",
+    default="align",
     help="use outputs from a previous run, starting processing at this step",
 )
 @click.option(
@@ -139,7 +138,6 @@ class ProcessingStep(str, Enum):
     default="denoise",
     help="terminate processing after this step",
 )
-@click.option("--ccderaser", type=str, default="ccderaser", help="ccderaser executable")
 @click.option("--aretomo", type=str, default="AreTomo", help="aretomo executable")
 @click.option(
     "--gpus",
@@ -171,7 +169,6 @@ def cli(
     topaz_model,
     start_from,
     stop_at,
-    ccderaser,
     aretomo,
     gpus,
     tiltcorr,
@@ -180,7 +177,7 @@ def cli(
     Run aretomo in batch on data preprocessed in warp.
 
     Needs to be ran after imod stacks were generated.
-    Requires ccderaser and AreTomo>=1.3.0.
+    Requires AreTomo>=1.3.0.
 
     Assumes the default Warp directory structure with generated imod stacks.
     """
@@ -318,13 +315,6 @@ def cli(
                 print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), file=f)
                 print(f'Command: {" ".join(sys.argv)}', file=f)
                 print(summary, "\n", file=f)
-
-        if steps["fix"]:
-            from ._fix import fix_batch
-
-            if verbose:
-                print("\n[green]Fixing with ccderaser...")
-            fix_batch(progress, tilt_series, cmd=ccderaser, **meta_kwargs)
 
         if steps["align"]:
             from ._aretomo import aretomo_batch

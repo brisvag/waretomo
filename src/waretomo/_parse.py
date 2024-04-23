@@ -110,7 +110,6 @@ def parse_data(
         else:
             roi_file = None
 
-        ts_fixed = ts_name + "_fix"
         ts_stripped = ts_name.split(".")[0]
         alignment_result_dir = output_dir / (ts_stripped + "_Imod")
 
@@ -119,7 +118,6 @@ def parse_data(
                 "name": ts_name,
                 "stack": stack,
                 "rawtlt": stack.with_suffix(".rawtlt"),
-                "fix": output_dir / (ts_fixed + ".st"),
                 "aln": output_dir / (ts_stripped + ".aln"),
                 "xf": alignment_result_dir / (ts_stripped + ".xf"),
                 "tlt": alignment_result_dir / (ts_stripped + ".tlt"),
