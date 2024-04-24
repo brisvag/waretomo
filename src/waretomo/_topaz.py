@@ -1,11 +1,11 @@
 import contextlib
 import io
+import logging
 import multiprocessing
 import re
 import time
 from concurrent import futures
 
-from rich import print
 from topaz.commands.denoise3d import denoise, load_model, set_device, train_model
 from topaz.torch import set_num_threads
 
@@ -52,19 +52,18 @@ def topaz_batch(
     patch_size=32,
     gpus=None,
     dry_run=False,
-    verbose=False,
     overwrite=False,
 ):
     inputs = [ts["recon"] for ts in tilt_series]
 
-    if verbose:
-        if train:
-            print(f"training model: '{model_name}' with inputs '{even}' and '{odd}'")
-        if len(inputs) > 2:
-            print(f"denoising: [{inputs[0]} [...] {inputs[-1]}]")
-        else:
-            print(f"denoising: {inputs}")
-        print(f"output: {outdir}")
+    log = logging.getLogger("waretomo")
+    if train:
+        log.info(f"training model: '{model_name}' with inputs '{even}' and '{odd}'")
+    if len(inputs) > 2:
+        log.info(f"denoising: [{inputs[0]} [...] {inputs[-1]}]")
+    else:
+        log.info(f"denoising: {inputs}")
+    log.info(f"output: {outdir}")
 
     if not dry_run:
         set_num_threads(0)

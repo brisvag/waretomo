@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import subprocess
@@ -7,7 +8,6 @@ from queue import Queue
 from time import sleep
 
 import GPUtil
-from rich import print
 
 from ._threaded import run_threaded
 
@@ -44,9 +44,9 @@ def _aretomo(
     reconstruct=False,
     gpu_queue=None,
     dry_run=False,
-    verbose=False,
     overwrite=False,
 ):
+    log = logging.getLogger("waretomo")
     # cwd dance is necessary cause aretomo messes up paths otherwise
     # need to use os.path.relpath cause pathlib cannot handle non-subpath relative paths
     # https://stackoverflow.com/questions/38083555/using-pathlibs-relative-to-for-directories-on-the-same-level
@@ -59,7 +59,7 @@ def _aretomo(
     if not reconstruct:
         output = output.with_stem(output.stem + "_aligned").with_suffix(".st")
     # LogFile is broken, so we do it ourselves
-    log = output.with_suffix(".aretomolog")
+    aretomolog = output.with_suffix(".aretomolog")
     with _cd(cwd):
         if not overwrite and output.exists():
             raise FileExistsError(output)
@@ -83,13 +83,15 @@ def _aretomo(
                 "VolZ": thickness_recon,
                 "PixSize": px_size,
                 "Kv": kv,
-                "ImgDose": dose,
                 "Cs": cs,
                 "Defoc": defocus,
                 "FlipVol": 1,
                 "WBP": 1,
             }
         )
+        if dose:
+            options["ImgDose"] = dose
+
     else:
         options.update(
             {
@@ -109,10 +111,9 @@ def _aretomo(
     # run aretomo with basic settings
     aretomo_cmd = f"{cmd} {' '.join(f'-{k} {v}' for k, v in options.items())}"
 
-    if verbose:
-        print(aretomo_cmd)
-        if not reconstruct:
-            print(f'mv {xf} {warp_mdoc_basename + ".xf"}')
+    log.info(aretomo_cmd)
+    if not reconstruct:
+        log.info(f'mv {xf} {warp_mdoc_basename + ".xf"}')
 
     if not dry_run:
         with _cd(cwd):
@@ -121,7 +122,7 @@ def _aretomo(
                     aretomo_cmd.split(), capture_output=True, check=False, cwd=cwd
                 )
             finally:
-                log.write_bytes(proc.stdout + proc.stderr)
+                aretomolog.write_bytes(proc.stdout + proc.stderr)
                 if gpu_queue is not None:
                     gpu_queue.put(gpu)
             proc.check_returncode()
@@ -137,14 +138,14 @@ def _aretomo(
 def aretomo_batch(
     progress, tilt_series, suffix="", label="", cmd="AreTomo", gpus=None, **kwargs
 ):
+    log = logging.getLogger("waretomo")
     if not shutil.which(cmd):
         raise FileNotFoundError(f"{cmd} is not available on the system")
     if gpus is None:
         gpus = [gpu.id for gpu in GPUtil.getGPUs()]
     if not gpus:
         raise RuntimeError("you need at least one GPU to run AreTomo")
-    if kwargs.get("verbose"):
-        print(f"[yellow]Running AreTomo in parallel on {len(gpus)} GPUs.")
+    log.info(f"Running AreTomo in parallel on {len(gpus)} GPUs.")
 
     # use a queue to hold gpu ids to ensure we only run one job per gpu
     gpu_queue = Queue()

@@ -1,13 +1,15 @@
+import logging
 from pathlib import Path, PureWindowsPath
 from xml.etree import ElementTree
 
 from mdocfile.data_models import Mdoc
-from rich import print
 
 
 def parse_data(
     progress, warp_dir, mdoc_dir, output_dir, roi_dir, just=(), exclude=(), train=False
 ):
+    log = logging.getLogger("waretomo")
+
     imod_dir = warp_dir / "imod"
     if not imod_dir.exists():
         raise FileNotFoundError("warp directory does not have an `imod` subdirectory")
@@ -58,12 +60,10 @@ def parse_data(
         valid_xml = None
         for i, tilt in enumerate(tilts):
             if not tilt.exists():
-                print(
-                    f"[red]WARN: {tilt.name} is listed in an mdoc file, "
-                    "but the file does not exists."
-                )
-                print(
-                    "[red]      The tilt will be skipped, "
+                log.warning(
+                    f"{tilt.name} is listed in an mdoc file, "
+                    "but the file does not exists. "
+                    "The tilt will be skipped, "
                     "but you may want to check your data."
                 )
                 skipped_tilts.append(i)
@@ -110,8 +110,17 @@ def parse_data(
         else:
             roi_file = None
 
+        dose = mdoc.section_data[0].ExposureDose
+        if not dose:
+            log.error("Exposure dose not present in mdoc! Setting to 0.")
+        px_size_raw = mdoc.section_data[0].PixelSpacing
+        if not px_size_raw:
+            log.error("Pixel spacing not present in mdoc! Setting to 1.")
+
+        # aretomo being weird about paths and names splitting needs extra care...
         ts_stripped = ts_name.split(".")[0]
-        alignment_result_dir = output_dir / (ts_stripped + "_Imod")
+        ts_aligned = ts_stripped + "_aligned"
+        alignment_result_dir = output_dir / (ts_aligned + ".st_Imod")
 
         tilt_series.append(
             {
@@ -119,8 +128,8 @@ def parse_data(
                 "stack": stack,
                 "rawtlt": stack.with_suffix(".rawtlt"),
                 "aln": output_dir / (ts_stripped + ".aln"),
-                "xf": alignment_result_dir / (ts_stripped + ".xf"),
-                "tlt": alignment_result_dir / (ts_stripped + ".tlt"),
+                "xf": alignment_result_dir / (ts_aligned + ".xf"),
+                "tlt": alignment_result_dir / (ts_aligned + ".tlt"),
                 "skipped_tilts": skipped_tilts,
                 "mdoc": mdoc_file,
                 "roi": roi_file,
@@ -132,8 +141,8 @@ def parse_data(
                 "recon_even": output_dir / "even" / (ts_name + ".mrc"),
                 "recon": output_dir / (ts_name + ".mrc"),
                 "aretomo_kwargs": {
-                    "dose": mdoc.section_data[0].ExposureDose,
-                    "px_size": mdoc.section_data[0].PixelSpacing * 2**binning,
+                    "dose": dose,
+                    "px_size": px_size_raw * 2**binning,
                     "cs": cs,
                     "kv": kv,
                     "defocus": defocus,

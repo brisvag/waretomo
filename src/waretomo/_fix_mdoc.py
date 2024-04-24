@@ -1,21 +1,21 @@
+import logging
+
 import pandas as pd
 from mdocfile.data_models import Mdoc
 
 from ._threaded import run_threaded
 
 
-def _tilt_mdoc(
-    mdoc_file, tlt_file, skipped_tilts, verbose=False, dry_run=False, overwrite=False
-):
+def _tilt_mdoc(mdoc_file, tlt_file, skipped_tilts, dry_run=False, overwrite=False):
     output = mdoc_file.parent / "mdoc_tilted" / mdoc_file.name
 
     if not overwrite and output.exists():
         raise FileExistsError(output)
 
-    if verbose:
-        print(f"Tilting mdoc: {mdoc_file}")
-        print(f"using: {tlt_file}")
-        print(f"saving to {output}")
+    log = logging.getLogger("waretomo")
+    log.info(f"Tilting mdoc: {mdoc_file}")
+    log.info(f"using: {tlt_file}")
+    log.info(f"saving to {output}")
 
     if not dry_run:
         mdoc = Mdoc.from_file(mdoc_file)

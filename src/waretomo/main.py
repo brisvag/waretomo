@@ -46,7 +46,7 @@ class ProcessingStep(str, Enum):
     is_flag=True,
     help="only print some info, without running the commands.",
 )
-@click.option("-v", "--verbose", is_flag=True, help="echo all individual commands")
+@click.option("-v", "--verbose", count=True, help="echo all individual commands")
 @click.option(
     "-j",
     "--just",
@@ -181,16 +181,26 @@ def cli(
 
     Assumes the default Warp directory structure with generated imod stacks.
     """
+    import logging
     import sys
     from datetime import datetime
     from inspect import cleandoc
     from pathlib import Path
 
     from rich import print
+    from rich.logging import RichHandler
     from rich.panel import Panel
     from rich.progress import Progress
 
     from ._parse import parse_data
+
+    logging.basicConfig(
+        level=40 - max(verbose * 10, 0),
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler()],
+    )
+    log = logging.getLogger("waretomo")
 
     if gpus is not None:
         gpus = [int(gpu) for gpu in gpus.split(",")]
@@ -252,7 +262,6 @@ def cli(
         meta_kwargs = {
             "overwrite": overwrite,
             "dry_run": dry_run,
-            "verbose": verbose,
         }
 
         topaz_kwargs = {
@@ -309,6 +318,11 @@ def cli(
         )
         print(Panel(summary))
 
+        ts = tilt_series[0]
+        ts_name = ts["name"]
+        ts_info = {k: v for k, v in ts.items() if k not in ("even", "odd")}
+        log.info(f'Metadata from tiltseries "{ts_name}": {ts_info}')
+
         if not dry_run:
             with open(output_dir / "waretomo.log", "a") as f:
                 print("=" * 80, file=f)
@@ -319,8 +333,7 @@ def cli(
         if steps["align"]:
             from ._aretomo import aretomo_batch
 
-            if verbose:
-                print("\n[green]Aligning with AreTomo...")
+            log.info("Aligning with AreTomo...")
             aretomo_batch(
                 progress,
                 tilt_series,
@@ -331,12 +344,11 @@ def cli(
 
         if steps["tilt_mdocs"]:
             if not tiltcorr:
-                print("No need to tilt mdocs!")
+                log.info("No need to tilt mdocs!")
             else:
                 from ._fix_mdoc import tilt_mdocs_batch
 
-                if verbose:
-                    print("\n[green]Tilting mdocs...")
+                log.info("Tilting mdocs...")
                 (mdoc_dir / "mdoc_tilted").mkdir(parents=True, exist_ok=True)
                 tilt_mdocs_batch(
                     progress,
@@ -347,8 +359,7 @@ def cli(
         if steps["reconstruct"]:
             from ._aretomo import aretomo_batch
 
-            if verbose:
-                print("\n[green]Reconstructing with AreTomo...")
+            log.info("Reconstructing with AreTomo...")
             aretomo_batch(
                 progress,
                 tilt_series,
@@ -362,16 +373,14 @@ def cli(
             from ._stack import prepare_half_stacks
 
             for half in ("even", "odd"):
-                if verbose:
-                    print(f"\n[green]Preparing {half} stacks for denoising...")
+                log.info(f"Preparing {half} stacks for denoising...")
                 prepare_half_stacks(progress, tilt_series, half=half, **meta_kwargs)
 
         if steps["reconstruct_halves"]:
             from ._aretomo import aretomo_batch
 
             for half in ("even", "odd"):
-                if verbose:
-                    print(f"\n[green]Reconstructing {half} tomograms for deonoising...")
+                log.info(f"Reconstructing {half} tomograms for deonoising...")
                 half_dir = output_dir / half
                 half_dir.mkdir(parents=True, exist_ok=True)
                 aretomo_batch(
@@ -392,8 +401,7 @@ def cli(
         if steps["denoise"]:
             from ._topaz import topaz_batch
 
-            if verbose:
-                print("\n[green]Denoising tomograms...")
+            log.info("Denoising tomograms...")
             outdir_denoised = output_dir / "denoised"
             outdir_denoised.mkdir(parents=True, exist_ok=True)
             topaz_batch(
