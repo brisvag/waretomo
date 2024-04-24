@@ -78,9 +78,9 @@ def topaz_batch(
                 odd_path=odd,
                 save_prefix=str(outdir / "trained_models" / model_name),
                 save_interval=10,
-                device=-2
-                if gpus is None
-                else next(iter(gpus)),  # TODO: actually run with multiple gpus?
+                device=(
+                    -2 if gpus is None else next(iter(gpus))
+                ),  # TODO: actually run with multiple gpus?
                 tilesize=patch_size,
                 base_kernel_width=11,
                 num_workers=multiprocessing.cpu_count(),
