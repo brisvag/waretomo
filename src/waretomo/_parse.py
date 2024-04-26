@@ -127,20 +127,19 @@ def parse_data(
             log.error("Pixel spacing not present in mdoc! Setting to 1.")
 
         # aretomo being weird about paths and names splitting needs extra care...
-        ts_stripped = ts_name.split(".")[0]
-        ts_aligned = ts_stripped + "_aligned"
+        ts_aligned = ts_name.split(".")[0] + "_aligned"
         alignment_result_dir = output_dir / (ts_aligned + ".st_Imod")
 
         tilt_series.append(
             {
                 "name": ts_name,
+                "mdoc": mdoc_file,
                 "stack": stack,
                 "rawtlt": stack.with_suffix(".rawtlt"),
-                "aln": output_dir / (ts_stripped + ".aln"),
                 "xf": alignment_result_dir / (ts_aligned + ".xf"),
                 "tlt": alignment_result_dir / (ts_aligned + ".tlt"),
+                "aln": output_dir / (mdoc_name + ".st.aln"),
                 "skipped_tilts": skipped_tilts,
-                "mdoc": mdoc_file,
                 "roi": roi_file,
                 "odd": odd,
                 "even": even,
