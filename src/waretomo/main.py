@@ -46,7 +46,12 @@ class ProcessingStep(str, Enum):
     is_flag=True,
     help="only print some info, without running the commands.",
 )
-@click.option("-v", "--verbose", count=True, help="echo all individual commands")
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="level of verbosity; can be passed multiple times.",
+)
 @click.option(
     "-j",
     "--just",
@@ -81,6 +86,11 @@ class ProcessingStep(str, Enum):
     type=int,
     default=4,
     help="binning for aretomo reconstruction (relative to warp pre-processed binning)",
+)
+@click.option(
+    "--dose",
+    type=float,
+    help="exposure dose (e/A^2/tilt_image). If not passed, guess from mdocs.",
 )
 @click.option(
     "-a", "--tilt-axis", type=float, help="starting tilt axis for AreTomo, if any"
@@ -159,6 +169,7 @@ def cli(
     sample_thickness,
     z_thickness,
     binning,
+    dose,
     tilt_axis,
     patches,
     roi_dir,
@@ -246,6 +257,7 @@ def cli(
             just=just,
             exclude=exclude,
             train=train,
+            dose=dose,
         )
 
         aretomo_kwargs = {
@@ -321,7 +333,21 @@ def cli(
         ts = tilt_series[0]
         ts_name = ts["name"]
         ts_info = {k: v for k, v in ts.items() if k not in ("even", "odd")}
-        log.info(f'Metadata from tiltseries "{ts_name}": {ts_info}')
+        ts_info = {
+            k: (str(v.relative_to(warp_dir)) if isinstance(v, Path) else v)
+            for k, v in ts_info.items()
+            if k
+        }
+        ts_info.update(ts_info.pop("aretomo_kwargs"))
+        ts_info = "".join(f'{nl}{" " * 12}- {k}: {v}' for k, v in ts_info.items())
+        first_ts_summary = cleandoc(
+            f"""
+            Double check that these values make sense for {ts_name}:
+            {ts_info}
+            """
+        )
+
+        print(Panel(first_ts_summary))
 
         if not dry_run:
             with open(output_dir / "waretomo.log", "a") as f:
